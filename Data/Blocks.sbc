@@ -84,34 +84,6 @@
       <DamagedSound>ParticleElectrical</DamagedSound>
     </Definition>
 
-    <Definition>
-      <Id>
-        <TypeId>MotorRotor</TypeId>
-        <SubtypeId>ElectronicsPanelHeadDelete</SubtypeId>
-      </Id>
-      <DisplayName>Electronics Panel (DO REMOVE)</DisplayName>
-      <Icon>Textures\FAKE.dds</Icon>
-      <CubeSize>Large</CubeSize>
-      <BlockTopology>TriangleMesh</BlockTopology>
-      <Size x="1" y="1" z="1" />
-      <ModelOffset x="0" y="0" z="0" />
-      <Model>Models\Empty.mwm</Model>
-      <UseModelIntersection>true</UseModelIntersection>
-      <Components>
-        <Component Subtype="SteelPlate" Count="1" />
-      </Components>
-      <CriticalComponent Subtype="SteelPlate" Index="0" />
-      <MountPoints>
-        <MountPoint Side="Bottom" StartX="0" StartY="0" EndX="0" EndY="0" />
-      </MountPoints>
-      <BlockPairName>ElectronicsPanelTop</BlockPairName>
-      <MirroringY>Z</MirroringY>
-      <MirroringZ>Y</MirroringZ>
-      <EdgeType>Light</EdgeType>
-      <BuildTimeSeconds>99999999</BuildTimeSeconds>
-      <Public>false</Public>
-    </Definition>
-
 
     <Definition xsi:type="MyObjectBuilder_MotorStatorDefinition">
       <Id>
@@ -151,7 +123,7 @@
       <PrimarySound>BlockRotor</PrimarySound>
       <RequiredPowerInput>0</RequiredPowerInput>
       <MaxForceMagnitude>0.0001</MaxForceMagnitude>
-      <RotorPart>ElectronicsPanelTop4x4</RotorPart>
+      <RotorPart>ElectronicsPanelTop</RotorPart>
       <RotorDisplacementMin>0</RotorDisplacementMin>
       <RotorDisplacementMax>0.0001</RotorDisplacementMax>
       <RotorDisplacementInModel>0</RotorDisplacementInModel>
@@ -195,12 +167,13 @@
       <DamagedSound>ParticleElectrical</DamagedSound>
     </Definition>
 
+
     <Definition>
       <Id>
         <TypeId>MotorRotor</TypeId>
-        <SubtypeId>ElectronicsPanelHead4x4Delete</SubtypeId>
+        <SubtypeId>ElectronicsPanelHeadDelete</SubtypeId>
       </Id>
-      <DisplayName>Electronics Panel 4x4 (DO REMOVE)</DisplayName>
+      <DisplayName>Electronics Panel (DO REMOVE)</DisplayName>
       <Icon>Textures\FAKE.dds</Icon>
       <CubeSize>Large</CubeSize>
       <BlockTopology>TriangleMesh</BlockTopology>
@@ -215,14 +188,13 @@
       <MountPoints>
         <MountPoint Side="Bottom" StartX="0" StartY="0" EndX="0" EndY="0" />
       </MountPoints>
-      <BlockPairName>ElectronicsPanelTop4x4</BlockPairName>
+      <BlockPairName>ElectronicsPanelTop</BlockPairName>
       <MirroringY>Z</MirroringY>
       <MirroringZ>Y</MirroringZ>
       <EdgeType>Light</EdgeType>
       <BuildTimeSeconds>99999999</BuildTimeSeconds>
       <Public>false</Public>
     </Definition>
-
 
   </CubeBlocks>
 </Definitions>

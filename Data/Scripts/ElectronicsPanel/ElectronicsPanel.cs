@@ -31,47 +31,58 @@ using Digi.Utils;
 namespace Digi.ElectronicsPanel
 {
     [MySessionComponentDescriptor(MyUpdateOrder.AfterSimulation)]
-    public class Panels : MySessionComponentBase
+    public class ElectronicsPanelMod : MySessionComponentBase
     {
         public static bool init { get; private set; }
         
-        private static HashSet<string> allowedBlockTypes = new HashSet<string>()
-        {
-            "MyObjectBuilder_MyProgrammableBlock",
-            "MyObjectBuilder_TimerBlock",
-            "MyObjectBuilder_InteriorLight",
-            "MyObjectBuilder_ReflectorLight",
-            "MyObjectBuilder_BatteryBlock",
-            "MyObjectBuilder_ButtonPanel",
-            "MyObjectBuilder_SoundBlock",
-            "MyObjectBuilder_TextPanel",
-            "MyObjectBuilder_SensorBlock",
-            "MyObjectBuilder_RadioAntenna",
-            "MyObjectBuilder_LaserAntenna",
-            "MyObjectBuilder_Beacon",
-            "MyObjectBuilder_CameraBlock",
-            "MyObjectBuilder_Projector",
-        };
+        public const string PANEL_BASE = "ElectronicsPanel";
+        public const string PANEL_BASE_4X4 = "ElectronicsPanel4x4";
+        public const string PANEL_TOP = "ElectronicsPanelHead";
+        public const string PANEL_TOP_4X4 = "ElectronicsPanelHead4x4";
+        public const string PANEL_TOP_DELETE = "ElectronicsPanelHeadDelete";
         
-        public static bool IsBlockAllowed(string typeId, string subTypeId)
+        private const string CONTROLPANEL_SUBTYPEID = "SmallControlPanel";
+        private static readonly HashSet<MyObjectBuilderType> allowedBlockTypes = new HashSet<MyObjectBuilderType>()
         {
-            if(typeId == "MyObjectBuilder_TerminalBlock" && subTypeId == "SmallControlPanel")
-                return true;
-            
-            return allowedBlockTypes.Contains(typeId);
-        }
+            typeof(MyObjectBuilder_MyProgrammableBlock),
+            typeof(MyObjectBuilder_TimerBlock),
+            typeof(MyObjectBuilder_InteriorLight),
+            typeof(MyObjectBuilder_ReflectorLight),
+            typeof(MyObjectBuilder_BatteryBlock),
+            typeof(MyObjectBuilder_ButtonPanel),
+            typeof(MyObjectBuilder_SoundBlock),
+            typeof(MyObjectBuilder_TextPanel),
+            typeof(MyObjectBuilder_SensorBlock),
+            typeof(MyObjectBuilder_RadioAntenna),
+            typeof(MyObjectBuilder_LaserAntenna),
+            typeof(MyObjectBuilder_Beacon),
+            typeof(MyObjectBuilder_CameraBlock),
+            typeof(MyObjectBuilder_Projector),
+        };
         
         public void Init()
         {
+            Log.Init();
             Log.Info("Initialized.");
             init = true;
         }
         
         protected override void UnloadData()
         {
-            Log.Info("Mod unloaded.");
+            try
+            {
+                if(init)
+                {
+                    init = false;
+                    Log.Info("Mod unloaded.");
+                }
+            }
+            catch(Exception e)
+            {
+                Log.Error(e);
+            }
+            
             Log.Close();
-            init = false;
         }
         
         public override void UpdateAfterSimulation()
@@ -84,124 +95,94 @@ namespace Digi.ElectronicsPanel
                 Init();
             }
         }
+        
+        public static bool IsBlockAllowed(MyObjectBuilderType typeId, string subTypeId)
+        {
+            if(typeId == typeof(MyObjectBuilder_TerminalBlock) && subTypeId == CONTROLPANEL_SUBTYPEID)
+                return true;
+            
+            return allowedBlockTypes.Contains(typeId);
+        }
     }
     
-    [MyEntityComponentDescriptor(typeof(MyObjectBuilder_MotorStator), "ElectronicsPanel", "ElectronicsPanel4x4")]
+    [MyEntityComponentDescriptor(typeof(MyObjectBuilder_MotorStator), ElectronicsPanelMod.PANEL_BASE, ElectronicsPanelMod.PANEL_BASE_4X4)]
     public class ElectronicsPanel : MyGameLogicComponent
     {
-        private static HashSet<string> panelTops = new HashSet<string>()
-        {
-            "ElectronicsPanelHead",
-            "ElectronicsPanelHead4x4"
-        };
-        
-        private MyObjectBuilder_EntityBase objectBuilder;
-        private IMyEntity topEnt;
-        //private string status;
         private bool is4x4 = false;
-        private int skip = 999;
+        private byte skip = 200;
+        private byte justAttached = 0;
+        
+        private static BoundingSphereD sphere = new BoundingSphereD(Vector3D.Zero, 1);
         
         public override void Init(MyObjectBuilder_EntityBase objectBuilder)
         {
-            this.objectBuilder = objectBuilder;
-            
             Entity.NeedsUpdate |= MyEntityUpdateEnum.BEFORE_NEXT_FRAME | MyEntityUpdateEnum.EACH_FRAME;
         }
         
         public override void UpdateOnceBeforeFrame()
         {
-            var block = Entity as IMyTerminalBlock;
-            //block.AppendingCustomInfo += CustomInfo; // issues with this...
-            is4x4 = (block.BlockDefinition.SubtypeId == "ElectronicsPanel4x4");
-        }
-        
-        /*
-        public void CustomInfo(IMyTerminalBlock block, StringBuilder info)
-        {
-            info.Clear(); // workaround to some issue :(
-            info.AppendLine();
-            info.Append(status);
-        }
-         */
-        
-        private void SetStatus(string status)
-        {
-            /*
-            if(this.status != status)
-            {
-                this.status = status;
-                (Entity as IMyTerminalBlock).RefreshCustomInfo();
-            }
-             */
+            is4x4 = (Entity as IMyCubeBlock).BlockDefinition.SubtypeId == ElectronicsPanelMod.PANEL_BASE_4X4;
         }
         
         public override void UpdateAfterSimulation()
         {
             try
             {
-                if(topEnt == null)
+                var stator = Entity as IMyMotorStator;
+                
+                //MyAPIGateway.Utilities.ShowNotification("rotor="+(stator.Rotor != null)+"; "+(stator.IsAttached?"IsAttached; ":"")+(stator.PendingAttachment?"Pending; ":"")+(stator.IsLocked?"IsLocked":""), 16, MyFontEnum.Red);
+                
+                if(stator.PendingAttachment || stator.Rotor == null || stator.Rotor.Closed)
                 {
-                    if(++skip >= 10)
+                    if(!stator.Enabled)
+                        return;
+                    
+                    if(++skip >= 15)
                     {
                         skip = 0;
+                        sphere.Center = stator.WorldMatrix.Translation;
+                        var ents = MyAPIGateway.Entities.GetEntitiesInSphere(ref sphere);
                         
-                        var obj = (Entity as IMyCubeBlock).GetObjectBuilderCubeBlock(false) as MyObjectBuilder_MotorBase;
-                        
-                        if(obj.RotorEntityId.HasValue && obj.RotorEntityId.Value != 0)
+                        foreach(var ent in ents)
                         {
-                            IMyEntity headEnt;
+                            var rotor = ent as IMyMotorRotor;
                             
-                            if(!MyAPIGateway.Entities.TryGetEntityById(obj.RotorEntityId.Value, out headEnt) || headEnt.Closed || headEnt.MarkedForClose)
+                            if(rotor != null && rotor.CubeGrid.Physics != null && (is4x4 ? rotor.BlockDefinition.SubtypeId == ElectronicsPanelMod.PANEL_TOP_4X4 : rotor.BlockDefinition.SubtypeId == ElectronicsPanelMod.PANEL_TOP))
                             {
-                                SetStatus("Invalid attached panel entity!");
-                                return;
+                                stator.Attach(rotor);
+                                justAttached = 5; // check if it's locked for the next 5 update frames including this one
+                                break;
                             }
-                            
-                            var headBlock = headEnt as IMyCubeBlock;
-                            
-                            if(!panelTops.Contains(headBlock.BlockDefinition.SubtypeId))
-                            {
-                                SetStatus("Unknown attached panel!");
-                                return;
-                            }
-                            
-                            topEnt = headEnt;
-                            SetStatus("Panel is attached.");
-                        }
-                        else
-                        {
-                            (Entity as IMyMotorStator).ApplyAction("Attach");
-                            SetStatus("Not attached, trying to attach...\n\nPlease align the smallship panel in the center of the largeship block's space.");
                         }
                     }
                     
                     return;
                 }
                 
-                if(topEnt.Closed || topEnt.MarkedForClose)
+                if(justAttached > 0)
                 {
-                    topEnt = null;
-                    return;
+                    justAttached--;
+                    
+                    if(stator.IsLocked)
+                    {
+                        justAttached = 0;
+                        stator.ApplyAction("Force weld"); // disable safety lock after attaching it because the IsLocked check doesn't work when not attached
+                    }
                 }
                 
-                var baseBlock = Entity as IMyMotorStator;
-                
-                if(!baseBlock.IsAttached)
-                {
-                    topEnt = null;
+                if(stator.IsLocked)
                     return;
-                }
                 
-                var topBlock = topEnt as IMyCubeBlock;
-                var topGrid = topBlock.CubeGrid as IMyCubeGrid;
-                var matrix = baseBlock.WorldMatrix;
+                var matrix = stator.WorldMatrix;
                 
                 if(is4x4)
-                    matrix.Translation += matrix.Down * (1 - baseBlock.Displacement) + matrix.Forward * 0.75 + matrix.Left * 0.75;
+                    matrix.Translation += matrix.Down * (1 - stator.Displacement) + matrix.Forward * 0.75 + matrix.Left * 0.75;
                 else
-                    matrix.Translation += matrix.Up * baseBlock.Displacement; // displacement is negative
+                    matrix.Translation += matrix.Up * stator.Displacement; // displacement is negative
                 
-                topGrid.SetWorldMatrix(matrix);
+                stator.RotorGrid.SetWorldMatrix(matrix);
+                
+                stator.ApplyAction("Force weld"); // re-enable safety lock after we know the top part is aligned properly
             }
             catch(Exception e)
             {
@@ -209,29 +190,17 @@ namespace Digi.ElectronicsPanel
             }
         }
         
-        public override void Close()
-        {
-            objectBuilder = null;
-            
-            var block = Entity as IMyTerminalBlock;
-            //block.AppendingCustomInfo -= CustomInfo;
-        }
-        
         public override MyObjectBuilder_EntityBase GetObjectBuilder(bool copy = false)
         {
-            return copy ? (MyObjectBuilder_EntityBase)objectBuilder.Clone() : objectBuilder;
+            return Entity.GetObjectBuilder(copy);
         }
     }
     
-    [MyEntityComponentDescriptor(typeof(MyObjectBuilder_MotorRotor), "ElectronicsPanelHead", "ElectronicsPanelHead4x4")]
+    [MyEntityComponentDescriptor(typeof(MyObjectBuilder_MotorRotor), ElectronicsPanelMod.PANEL_TOP, ElectronicsPanelMod.PANEL_TOP_4X4)]
     public class PanelHead : MyGameLogicComponent
     {
-        private MyObjectBuilder_EntityBase objectBuilder;
-        
         public override void Init(MyObjectBuilder_EntityBase objectBuilder)
         {
-            this.objectBuilder = objectBuilder;
-            
             Entity.NeedsUpdate |= MyEntityUpdateEnum.BEFORE_NEXT_FRAME | MyEntityUpdateEnum.EACH_FRAME;
         }
         
@@ -259,8 +228,6 @@ namespace Digi.ElectronicsPanel
         
         public override void Close()
         {
-            objectBuilder = null;
-            
             try
             {
                 var block = Entity as IMyCubeBlock;
@@ -288,11 +255,11 @@ namespace Digi.ElectronicsPanel
         
         public override MyObjectBuilder_EntityBase GetObjectBuilder(bool copy = false)
         {
-            return copy ? (MyObjectBuilder_EntityBase)objectBuilder.Clone() : objectBuilder;
+            return Entity.GetObjectBuilder(copy);
         }
     }
     
-    [MyEntityComponentDescriptor(typeof(MyObjectBuilder_MotorRotor), "ElectronicsPanelHeadDelete", "ElectronicsPanelHead4x4Delete")]
+    [MyEntityComponentDescriptor(typeof(MyObjectBuilder_MotorRotor), ElectronicsPanelMod.PANEL_TOP_DELETE)]
     public class PanelHeadDelete : MyGameLogicComponent
     {
         private MyObjectBuilder_EntityBase objectBuilder;
@@ -312,17 +279,13 @@ namespace Digi.ElectronicsPanel
                     return;
                 
                 MyObjectBuilder_CubeGrid gridObj = null;
-                Vector3D center;
-                string subTypeId;
                 
-                {
-                    var block = Entity as IMyCubeBlock;
-                    subTypeId = block.BlockDefinition.SubtypeId;
-                    var grid = block.CubeGrid as IMyCubeGrid;
-                    center = block.WorldMatrix.Translation + block.WorldMatrix.Up * 1.2;
-                    gridObj = grid.GetObjectBuilder(false) as MyObjectBuilder_CubeGrid;
-                    grid.SyncObject.SendCloseRequest();
-                }
+                var rotor = Entity as IMyMotorRotor;
+                var stator = rotor.Stator;
+                var subTypeId = rotor.BlockDefinition.SubtypeId;
+                var grid = rotor.CubeGrid as IMyCubeGrid;
+                gridObj = grid.GetObjectBuilder(false) as MyObjectBuilder_CubeGrid;
+                grid.Close();
                 
                 if(gridObj == null)
                 {
@@ -332,21 +295,23 @@ namespace Digi.ElectronicsPanel
                 
                 gridObj.GridSizeEnum = MyCubeSize.Small;
                 
-                if(subTypeId == "ElectronicsPanelHead4x4Delete")
+                if(stator.BlockDefinition.SubtypeId == ElectronicsPanelMod.PANEL_BASE_4X4)
                 {
-                    gridObj.CubeBlocks[0].SubtypeName = "ElectronicsPanelHead4x4";
+                    gridObj.CubeBlocks[0].SubtypeName = ElectronicsPanelMod.PANEL_TOP_4X4;
+                    var matrix = stator.WorldMatrix;
+                    var pos = matrix.Translation + matrix.Down + matrix.Forward * 0.75 + matrix.Left * 0.75;
+                    gridObj.PositionAndOrientation = new MyPositionAndOrientation(pos, gridObj.PositionAndOrientation.Value.Forward, gridObj.PositionAndOrientation.Value.Up);
                 }
                 else
                 {
-                    gridObj.CubeBlocks[0].SubtypeName = "ElectronicsPanelHead";
+                    gridObj.CubeBlocks[0].SubtypeName = ElectronicsPanelMod.PANEL_TOP;
                     gridObj.CubeBlocks[0].Min = new SerializableVector3I(-2, 0, -2);
                 }
                 
                 MyAPIGateway.Entities.RemapObjectBuilder(gridObj);
-                var ent = MyAPIGateway.Entities.CreateFromObjectBuilderAndAdd(gridObj);
-                ent.SetPosition(center);
+                var newRotor = MyAPIGateway.Entities.CreateFromObjectBuilderAndAdd(gridObj) as IMyMotorRotor;
                 
-                MyAPIGateway.Multiplayer.SendEntitiesCreated(new List<MyObjectBuilder_EntityBase>(1) { gridObj });
+                stator.Attach(newRotor);
             }
             catch(Exception e)
             {
@@ -365,15 +330,13 @@ namespace Digi.ElectronicsPanel
         }
     }
     
-    [MyEntityComponentDescriptor(typeof(MyObjectBuilder_CubeGrid))]
+    [MyEntityComponentDescriptor(typeof(MyObjectBuilder_CubeGrid))] // TODO workaround this not working in DS
     public class ElectronicsPanelGrid : MyGameLogicComponent
     {
-        private MyObjectBuilder_EntityBase objectBuilder;
         public bool isElectronicsPanel = false;
         
         public override void Init(MyObjectBuilder_EntityBase objectBuilder)
         {
-            this.objectBuilder = objectBuilder;
         }
         
         public void AddedElectronicsPanel()
@@ -403,7 +366,7 @@ namespace Digi.ElectronicsPanel
                 {
                     var def = block.FatBlock.BlockDefinition;
                     
-                    if(Panels.IsBlockAllowed(def.TypeIdString, def.SubtypeId))
+                    if(ElectronicsPanelMod.IsBlockAllowed(def.TypeId, def.SubtypeName))
                         return;
                 }
                 
@@ -418,27 +381,20 @@ namespace Digi.ElectronicsPanel
             }
         }
         
-        public override void Close()
-        {
-            objectBuilder = null;
-        }
-        
         public override MyObjectBuilder_EntityBase GetObjectBuilder(bool copy = false)
         {
-            return copy ? (MyObjectBuilder_EntityBase)objectBuilder.Clone() : objectBuilder;
+            return Entity.GetObjectBuilder(copy);
         }
     }
     
     [MyEntityComponentDescriptor(typeof(MyObjectBuilder_CubePlacer))]
     public class CubeBuilder : MyGameLogicComponent
     {
-        private MyObjectBuilder_EntityBase objectBuilder;
         private static IMyHudNotification notify = null;
         public static bool lastBlockRemoved = false;
         
         public override void Init(MyObjectBuilder_EntityBase objectBuilder)
         {
-            this.objectBuilder = objectBuilder;
             Entity.NeedsUpdate |= MyEntityUpdateEnum.EACH_FRAME;
         }
         
@@ -456,7 +412,7 @@ namespace Digi.ElectronicsPanel
                 if(block == null)
                     return;
                 
-                if(Panels.IsBlockAllowed(block.Id.TypeId.ToString(), block.Id.SubtypeName))
+                if(ElectronicsPanelMod.IsBlockAllowed(block.Id.TypeId, block.Id.SubtypeName))
                     return;
                 
                 var grid = builder.FindClosestGrid();
@@ -499,14 +455,9 @@ namespace Digi.ElectronicsPanel
             notify.Show();
         }
         
-        public override void Close()
-        {
-            objectBuilder = null;
-        }
-
         public override MyObjectBuilder_EntityBase GetObjectBuilder(bool copy = false)
         {
-            return copy ? Entity.GetObjectBuilder() : objectBuilder;
+            return Entity.GetObjectBuilder(copy);
         }
     }
 }
