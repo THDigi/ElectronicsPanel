@@ -46,6 +46,13 @@
       <RotorDisplacementInModel>1</RotorDisplacementInModel>
       <DamageEffectId>214</DamageEffectId>
       <DamagedSound>ParticleElectrical</DamagedSound>
+
+      <BlockVariants>
+        <BlockVariant>
+          <TypeId>MotorStator</TypeId>
+          <SubtypeId>ElectronicsPanel4x4</SubtypeId>
+        </BlockVariant>
+      </BlockVariants>
     </Definition>
 
     <Definition>
@@ -92,6 +99,7 @@
       </Id>
       <DisplayName>Electronics Panel 4x4</DisplayName>
       <Icon>Textures\Icons\ElectronicsPanel4x4.dds</Icon>
+      <GuiVisible>false</GuiVisible>
       <CubeSize>Large</CubeSize>
       <BlockTopology>TriangleMesh</BlockTopology>
       <Size x="1" y="1" z="1" />
