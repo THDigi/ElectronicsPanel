@@ -1,18 +1,16 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
 using Sandbox.Common.ObjectBuilders;
-using Sandbox.Game;
 using Sandbox.Game.Entities;
 using Sandbox.Game.Gui;
 using Sandbox.ModAPI;
-using VRage.Game;
-using VRage.Game.ModAPI;
-using VRageMath;
 using VRage;
-using VRage.ObjectBuilders;
+using VRage.Game;
 using VRage.Game.Components;
+using VRage.Game.ModAPI;
 using VRage.ModAPI;
+using VRage.ObjectBuilders;
+using VRageMath;
 
 namespace Digi.ElectronicsPanel
 {
@@ -87,7 +85,7 @@ namespace Digi.ElectronicsPanel
         }
     }
 
-    [MyEntityComponentDescriptor(typeof(MyObjectBuilder_MotorStator), ElectronicsPanelMod.PANEL_BASE, ElectronicsPanelMod.PANEL_BASE_4X4)]
+    [MyEntityComponentDescriptor(typeof(MyObjectBuilder_MotorStator), true, ElectronicsPanelMod.PANEL_BASE, ElectronicsPanelMod.PANEL_BASE_4X4)]
     public class ElectronicsPanel : MyGameLogicComponent
     {
         private bool is4x4 = false;
@@ -114,7 +112,7 @@ namespace Digi.ElectronicsPanel
 
                 //MyAPIGateway.Utilities.ShowNotification("rotor="+(stator.Rotor != null)+"; "+(stator.IsAttached?"IsAttached; ":"")+(stator.PendingAttachment?"Pending; ":"")+(stator.IsLocked?"IsLocked":""), 16, MyFontEnum.Red);
 
-                if(stator.PendingAttachment || stator.Rotor == null || stator.Rotor.Closed)
+                if(stator.PendingAttachment || stator.Top == null || stator.Top.Closed)
                 {
                     if(!stator.Enabled || ++skip < 15)
                         return;
@@ -142,14 +140,14 @@ namespace Digi.ElectronicsPanel
                 {
                     justAttached--;
 
-                    if(stator.IsLocked)
+                    if(stator.SafetyLock)
                     {
                         justAttached = 0;
                         stator.ApplyAction("Force weld"); // disable safety lock after attaching it because the IsLocked check doesn't work when not attached
                     }
                 }
 
-                if(stator.IsLocked)
+                if(stator.SafetyLock)
                     return;
 
                 var matrix = stator.WorldMatrix;
@@ -159,7 +157,7 @@ namespace Digi.ElectronicsPanel
                 else
                     matrix.Translation += matrix.Up * stator.Displacement; // displacement is negative
 
-                stator.RotorGrid.SetWorldMatrix(matrix);
+                stator.TopGrid.SetWorldMatrix(matrix);
 
                 stator.ApplyAction("Force weld"); // re-enable safety lock after we know the top part is aligned properly
             }
@@ -168,14 +166,9 @@ namespace Digi.ElectronicsPanel
                 Log.Error(e);
             }
         }
-
-        public override MyObjectBuilder_EntityBase GetObjectBuilder(bool copy = false)
-        {
-            return Entity.GetObjectBuilder(copy);
-        }
     }
 
-    [MyEntityComponentDescriptor(typeof(MyObjectBuilder_MotorRotor), ElectronicsPanelMod.PANEL_TOP, ElectronicsPanelMod.PANEL_TOP_4X4)]
+    [MyEntityComponentDescriptor(typeof(MyObjectBuilder_MotorRotor), true, ElectronicsPanelMod.PANEL_TOP, ElectronicsPanelMod.PANEL_TOP_4X4)]
     public class PanelHead : MyGameLogicComponent
     {
         public override void Init(MyObjectBuilder_EntityBase objectBuilder)
@@ -210,7 +203,8 @@ namespace Digi.ElectronicsPanel
             }
             catch(Exception)
             {
-                // ignore exceptions here because they might be when game is closing
+                // ignore exceptions here because they might be when game is closing and we just don't care then.
+                // NOTE: try-catch should never be used to control code flow, this is one rare exception.
             }
         }
 
@@ -233,14 +227,9 @@ namespace Digi.ElectronicsPanel
                 Log.Error(e);
             }
         }
-
-        public override MyObjectBuilder_EntityBase GetObjectBuilder(bool copy = false)
-        {
-            return Entity.GetObjectBuilder(copy);
-        }
     }
 
-    [MyEntityComponentDescriptor(typeof(MyObjectBuilder_MotorRotor), ElectronicsPanelMod.PANEL_TOP_DELETE)]
+    [MyEntityComponentDescriptor(typeof(MyObjectBuilder_MotorRotor), true, ElectronicsPanelMod.PANEL_TOP_DELETE)]
     public class PanelHeadDelete : MyGameLogicComponent
     {
         public override void Init(MyObjectBuilder_EntityBase objectBuilder)
@@ -258,7 +247,7 @@ namespace Digi.ElectronicsPanel
                 MyObjectBuilder_CubeGrid gridObj = null;
 
                 var rotor = (IMyMotorRotor)Entity;
-                var stator = rotor.Stator;
+                var stator = rotor.Base;
                 var grid = rotor.CubeGrid;
                 gridObj = grid.GetObjectBuilder(false) as MyObjectBuilder_CubeGrid;
                 grid.Close();
@@ -298,14 +287,9 @@ namespace Digi.ElectronicsPanel
                 Log.Error(e);
             }
         }
-
-        public override MyObjectBuilder_EntityBase GetObjectBuilder(bool copy = false)
-        {
-            return Entity.GetObjectBuilder(copy);
-        }
     }
 
-    [MyEntityComponentDescriptor(typeof(MyObjectBuilder_CubePlacer))]
+    [MyEntityComponentDescriptor(typeof(MyObjectBuilder_CubePlacer), true)]
     public class CubeBuilder : MyGameLogicComponent
     {
         private static IMyHudNotification notify = null;
@@ -320,7 +304,7 @@ namespace Digi.ElectronicsPanel
             try
             {
                 var builder = MyCubeBuilder.Static;
-                var def = builder?.ToolbarBlockDefinition;
+                var def = builder?.CubeBuilderState.CurrentBlockDefinition;
 
                 if(def == null || ElectronicsPanelMod.IsBlockAllowed(def.Id.TypeId, def.Id.SubtypeName))
                     return;
@@ -338,11 +322,7 @@ namespace Digi.ElectronicsPanel
             }
         }
 
-#if STABLE // HACK >>> STABLE condition
-        public static void Notify(string text, MyFontEnum font, int aliveTime = 50)
-#else
         public static void Notify(string text, string font, int aliveTime = 50)
-#endif
         {
             if(notify == null)
             {
@@ -356,11 +336,6 @@ namespace Digi.ElectronicsPanel
             }
 
             notify.Show();
-        }
-
-        public override MyObjectBuilder_EntityBase GetObjectBuilder(bool copy = false)
-        {
-            return Entity.GetObjectBuilder(copy);
         }
     }
 }
