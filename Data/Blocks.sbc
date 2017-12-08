@@ -7,6 +7,7 @@
         <TypeId>MotorStator</TypeId>
         <SubtypeId>ElectronicsPanel</SubtypeId>
       </Id>
+      <BlockPairName>ElectronicsPanel</BlockPairName>
       <DisplayName>Electronics Panel</DisplayName>
       <Icon>Textures\Icons\ElectronicsPanel.dds</Icon>
       <CubeSize>Large</CubeSize>
@@ -32,7 +33,6 @@
         <Model BuildPercentUpperBound="0.5" File="Models\ElectronicsPanel_Construction1.mwm" />
         <Model BuildPercentUpperBound="1.0" File="Models\ElectronicsPanel_Construction2.mwm" />
       </BuildProgressModels>
-      <BlockPairName>ElectronicsPanel</BlockPairName>
       <MirroringY>Z</MirroringY>
       <MirroringZ>Y</MirroringZ>
       <EdgeType>Light</EdgeType>
@@ -60,6 +60,8 @@
         <TypeId>MotorRotor</TypeId>
         <SubtypeId>ElectronicsPanelHead</SubtypeId>
       </Id>
+      <Public>false</Public>
+      <BlockPairName>ElectronicsPanelTop</BlockPairName>
       <DisplayName>Electronics PCB</DisplayName>
       <Icon>Textures\Icons\PCB.dds</Icon>
       <CubeSize>Small</CubeSize>
@@ -81,25 +83,23 @@
         <Model BuildPercentUpperBound="0.5" File="Models\ElectronicsPanelPCB_Construction1.mwm" />
         <Model BuildPercentUpperBound="1.0" File="Models\ElectronicsPanelPCB_Construction2.mwm" />
       </BuildProgressModels>
-      <BlockPairName>ElectronicsPanelTop</BlockPairName>
       <MirroringY>Z</MirroringY>
       <MirroringZ>Y</MirroringZ>
       <EdgeType>Light</EdgeType>
       <BuildTimeSeconds>20</BuildTimeSeconds>
-      <Public>false</Public>
       <DamageEffectId>214</DamageEffectId>
       <DamagedSound>ParticleElectrical</DamagedSound>
     </Definition>
-
 
     <Definition xsi:type="MyObjectBuilder_MotorStatorDefinition">
       <Id>
         <TypeId>MotorStator</TypeId>
         <SubtypeId>ElectronicsPanel4x4</SubtypeId>
       </Id>
+      <GuiVisible>false</GuiVisible>
+      <BlockPairName>ElectronicsPanel4x4</BlockPairName>
       <DisplayName>Electronics Panel 4x4</DisplayName>
       <Icon>Textures\Icons\ElectronicsPanel4x4.dds</Icon>
-      <GuiVisible>false</GuiVisible>
       <CubeSize>Large</CubeSize>
       <BlockTopology>TriangleMesh</BlockTopology>
       <Size x="1" y="1" z="1" />
@@ -123,7 +123,6 @@
         <Model BuildPercentUpperBound="0.5" File="Models\ElectronicsPanel4x4_Construction1.mwm" />
         <Model BuildPercentUpperBound="1.0" File="Models\ElectronicsPanel4x4_Construction2.mwm" />
       </BuildProgressModels>
-      <BlockPairName>ElectronicsPanel4x4</BlockPairName>
       <MirroringY>Z</MirroringY>
       <MirroringZ>Y</MirroringZ>
       <EdgeType>Light</EdgeType>
@@ -131,7 +130,7 @@
       <PrimarySound>BlockRotor</PrimarySound>
       <RequiredPowerInput>0</RequiredPowerInput>
       <MaxForceMagnitude>0.0001</MaxForceMagnitude>
-      <RotorPart>ElectronicsPanelTop</RotorPart>
+      <RotorPart>ElectronicsPanelTop4x4</RotorPart>
       <RotorDisplacementMin>0</RotorDisplacementMin>
       <RotorDisplacementMax>0.0001</RotorDisplacementMax>
       <RotorDisplacementInModel>0</RotorDisplacementInModel>
@@ -144,6 +143,8 @@
         <TypeId>MotorRotor</TypeId>
         <SubtypeId>ElectronicsPanelHead4x4</SubtypeId>
       </Id>
+      <Public>false</Public>
+      <BlockPairName>ElectronicsPanelTop4x4</BlockPairName>
       <DisplayName>Electronics PCB 4x4</DisplayName>
       <Icon>Textures\Icons\PCB4x4.dds</Icon>
       <CubeSize>Small</CubeSize>
@@ -165,12 +166,10 @@
         <Model BuildPercentUpperBound="0.5" File="Models\ElectronicsPanelPCB4x4_Construction1.mwm" />
         <Model BuildPercentUpperBound="1.0" File="Models\ElectronicsPanelPCB4x4_Construction2.mwm" />
       </BuildProgressModels>
-      <BlockPairName>ElectronicsPanelTop4x4</BlockPairName>
       <MirroringY>Z</MirroringY>
       <MirroringZ>Y</MirroringZ>
       <EdgeType>Light</EdgeType>
       <BuildTimeSeconds>20</BuildTimeSeconds>
-      <Public>false</Public>
       <DamageEffectId>214</DamageEffectId>
       <DamagedSound>ParticleElectrical</DamagedSound>
     </Definition>
@@ -181,6 +180,7 @@
         <TypeId>MotorRotor</TypeId>
         <SubtypeId>ElectronicsPanelHeadDelete</SubtypeId>
       </Id>
+      <BlockPairName>ElectronicsPanelTop</BlockPairName>
       <DisplayName>Electronics Panel (DO REMOVE)</DisplayName>
       <Icon>Textures\FAKE.dds</Icon>
       <CubeSize>Large</CubeSize>
@@ -191,12 +191,43 @@
       <UseModelIntersection>true</UseModelIntersection>
       <Components>
         <Component Subtype="SteelPlate" Count="1" />
+        <Component Subtype="Construction" Count="4" />
+        <Component Subtype="SteelPlate" Count="1" />
       </Components>
-      <CriticalComponent Subtype="SteelPlate" Index="0" />
+      <CriticalComponent Subtype="Construction" Index="0" />
       <MountPoints>
         <MountPoint Side="Bottom" StartX="0" StartY="0" EndX="0" EndY="0" />
       </MountPoints>
-      <BlockPairName>ElectronicsPanelTop</BlockPairName>
+      <MirroringY>Z</MirroringY>
+      <MirroringZ>Y</MirroringZ>
+      <EdgeType>Light</EdgeType>
+      <BuildTimeSeconds>99999999</BuildTimeSeconds>
+      <Public>false</Public>
+    </Definition>
+
+    <Definition>
+      <Id>
+        <TypeId>MotorRotor</TypeId>
+        <SubtypeId>ElectronicsPanelHead4x4Delete</SubtypeId>
+      </Id>
+      <BlockPairName>ElectronicsPanelTop4x4</BlockPairName>
+      <DisplayName>Electronics Panel 4x4 (DO REMOVE)</DisplayName>
+      <Icon>Textures\FAKE.dds</Icon>
+      <CubeSize>Large</CubeSize>
+      <BlockTopology>TriangleMesh</BlockTopology>
+      <Size x="1" y="1" z="1" />
+      <ModelOffset x="0" y="0" z="0" />
+      <Model>Models\Empty.mwm</Model>
+      <UseModelIntersection>true</UseModelIntersection>
+      <Components>
+        <Component Subtype="SteelPlate" Count="1" />
+        <Component Subtype="Construction" Count="4" />
+        <Component Subtype="SteelPlate" Count="1" />
+      </Components>
+      <CriticalComponent Subtype="Construction" Index="0" />
+      <MountPoints>
+        <MountPoint Side="Bottom" StartX="0" StartY="0" EndX="0" EndY="0" />
+      </MountPoints>
       <MirroringY>Z</MirroringY>
       <MirroringZ>Y</MirroringZ>
       <EdgeType>Light</EdgeType>
