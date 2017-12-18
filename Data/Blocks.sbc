@@ -180,6 +180,7 @@
         <TypeId>MotorRotor</TypeId>
         <SubtypeId>ElectronicsPanelHeadDelete</SubtypeId>
       </Id>
+      <Public>false</Public>
       <BlockPairName>ElectronicsPanelTop</BlockPairName>
       <DisplayName>Electronics Panel (DO REMOVE)</DisplayName>
       <Icon>Textures\FAKE.dds</Icon>
@@ -202,7 +203,6 @@
       <MirroringZ>Y</MirroringZ>
       <EdgeType>Light</EdgeType>
       <BuildTimeSeconds>99999999</BuildTimeSeconds>
-      <Public>false</Public>
     </Definition>
 
     <Definition>
@@ -210,6 +210,7 @@
         <TypeId>MotorRotor</TypeId>
         <SubtypeId>ElectronicsPanelHead4x4Delete</SubtypeId>
       </Id>
+      <Public>false</Public>
       <BlockPairName>ElectronicsPanelTop4x4</BlockPairName>
       <DisplayName>Electronics Panel 4x4 (DO REMOVE)</DisplayName>
       <Icon>Textures\FAKE.dds</Icon>
@@ -232,7 +233,6 @@
       <MirroringZ>Y</MirroringZ>
       <EdgeType>Light</EdgeType>
       <BuildTimeSeconds>99999999</BuildTimeSeconds>
-      <Public>false</Public>
     </Definition>
 
   </CubeBlocks>

@@ -406,6 +406,12 @@ namespace Digi.ElectronicsPanel
                 var grid = rotor.CubeGrid;
                 var gridObj = (MyObjectBuilder_CubeGrid)grid.GetObjectBuilder(false);
 
+                if(gridObj.CubeBlocks.Count > 1) // most likely someone placed this block on a largegrid...
+                {
+                    grid.RemoveBlock(rotor.SlimBlock);
+                    return;
+                }
+
                 grid.Close();
                 gridObj.GridSizeEnum = MyCubeSize.Small;
 
