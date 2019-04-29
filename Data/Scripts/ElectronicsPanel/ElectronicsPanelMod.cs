@@ -13,12 +13,6 @@ namespace Digi.ElectronicsPanel
     [MySessionComponentDescriptor(MyUpdateOrder.AfterSimulation)]
     public class ElectronicsPanelMod : MySessionComponentBase
     {
-        public override void LoadData()
-        {
-            instance = this;
-            Log.SetUp("Electronics Panel", 514760877, "ElectronicsPanel");
-        }
-
         public static ElectronicsPanelMod instance;
 
         public bool init = false;
@@ -66,35 +60,16 @@ namespace Digi.ElectronicsPanel
             typeof(MyObjectBuilder_Projector),
         };
 
-        public void Init()
+        public override void LoadData()
         {
-            Log.Init();
-            init = true;
+            instance = this;
+            Log.ModName = "Electronics Panel";
+            Log.AutoClose = true;
         }
 
         protected override void UnloadData()
         {
             instance = null;
-            init = false;
-            Log.Close();
-        }
-
-        public override void UpdateAfterSimulation()
-        {
-            try
-            {
-                if(!init)
-                {
-                    if(MyAPIGateway.Session == null)
-                        return;
-
-                    Init();
-                }
-            }
-            catch(Exception e)
-            {
-                Log.Error(e);
-            }
         }
 
         public static bool IsBlockAllowed(MyDefinitionId defId)
