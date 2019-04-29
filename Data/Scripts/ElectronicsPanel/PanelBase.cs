@@ -26,6 +26,8 @@ namespace Digi.ElectronicsPanel
         {
             try
             {
+                ElectronicsPanelMod.SetupTerminalControls();
+
                 is4x4 = stator.BlockDefinition.SubtypeId == ElectronicsPanelMod.PANEL_BASE_4X4;
 
                 if(stator.CubeGrid.Physics != null)
@@ -34,97 +36,6 @@ namespace Digi.ElectronicsPanel
 
                     stator.LowerLimitDeg = 0;
                     stator.UpperLimitDeg = 0;
-                }
-
-                if(!ElectronicsPanelMod.instance.modifiedTerminalControls)
-                {
-                    ElectronicsPanelMod.instance.modifiedTerminalControls = true;
-
-                    #region Remove controls on this mod's blocks
-                    var controls = new List<IMyTerminalControl>();
-                    MyAPIGateway.TerminalControls.GetControls<IMyMotorAdvancedStator>(out controls);
-
-                    var controlIds = new HashSet<string>()
-                    {
-                        "Add Small Top Part", // HACK using large top part because "add small top part" causes the 5x5 panel to be attached wrong on normal rotor stators.
-                        "Reverse",
-                        "Torque",
-                        "BrakingTorque",
-                        "Velocity",
-                        "LowerLimit",
-                        "UpperLimit",
-                        "Displacement",
-                        "RotorLock",
-
-                        // no longer exist...
-                        "Weld speed",
-                        "Force weld",
-                    };
-
-                    foreach(var c in controls)
-                    {
-                        string id = c.Id;
-
-                        if(controlIds.Contains(id))
-                        {
-                            if(c.Visible != null)
-                                ElectronicsPanelMod.instance.controlVisibleFunc[id] = c.Visible; // preserve the existing visible condition
-
-                            c.Visible = (b) =>
-                            {
-                                var func = ElectronicsPanelMod.instance.controlVisibleFunc.GetValueOrDefault(id, null);
-                                return (func == null ? true : func.Invoke(b)) && !ElectronicsPanelMod.IsElectronicsPanel(b.SlimBlock.BlockDefinition.Id);
-                            };
-                        }
-                    }
-                    #endregion
-
-                    #region Remove actions on this mod's blocks
-                    var actionIds = new HashSet<string>()
-                    {
-                        "Add Small Top Part",
-                        "Reverse",
-                        "RotorLock",
-                        "IncreaseTorque",
-                        "DecreaseTorque",
-                        "ResetTorque",
-                        "IncreaseBrakingTorque",
-                        "DecreaseBrakingTorque",
-                        "ResetBrakingTorque",
-                        "IncreaseVelocity",
-                        "DecreaseVelocity",
-                        "ResetVelocity",
-                        "IncreaseLowerLimit",
-                        "DecreaseLowerLimit",
-                        "ResetLowerLimit",
-                        "IncreaseUpperLimit",
-                        "DecreaseUpperLimit",
-                        "ResetUpperLimit",
-                        "IncreaseDisplacement",
-                        "DecreaseDisplacement",
-                        "ResetDisplacement",
-                    };
-
-                    var actions = new List<IMyTerminalAction>();
-                    MyAPIGateway.TerminalControls.GetActions<IMyMotorAdvancedStator>(out actions);
-
-                    foreach(var a in actions)
-                    {
-                        string id = a.Id;
-
-                        if(actionIds.Contains(id))
-                        {
-                            if(a.Enabled != null)
-                                ElectronicsPanelMod.instance.actionEnabledFunc[id] = a.Enabled;
-
-                            a.Enabled = (b) =>
-                            {
-                                var func = ElectronicsPanelMod.instance.actionEnabledFunc.GetValueOrDefault(id, null);
-                                return (func == null ? true : func.Invoke(b)) && !ElectronicsPanelMod.IsElectronicsPanel(b.SlimBlock.BlockDefinition.Id);
-                            };
-                        }
-                    }
-                    #endregion
                 }
             }
             catch(Exception e)

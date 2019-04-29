@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using Sandbox.Common.ObjectBuilders;
 using Sandbox.ModAPI;
+using Sandbox.ModAPI.Interfaces.Terminal;
 using VRage.Game;
 using VRage.Game.Components;
 using VRage.Game.ModAPI;
@@ -33,7 +34,7 @@ namespace Digi.ElectronicsPanel
             MyStringHash.GetOrCompute(PANEL_BASE),
             MyStringHash.GetOrCompute(PANEL_BASE_4X4),
         };
-        
+
         public readonly Dictionary<string, Func<IMyTerminalBlock, bool>> actionEnabledFunc = new Dictionary<string, Func<IMyTerminalBlock, bool>>();
         public readonly Dictionary<string, Func<IMyTerminalBlock, bool>> controlVisibleFunc = new Dictionary<string, Func<IMyTerminalBlock, bool>>();
 
@@ -120,6 +121,105 @@ namespace Digi.ElectronicsPanel
             }
 
             notify.Show();
+        }
+
+        public static void SetupTerminalControls()
+        {
+            if(instance.modifiedTerminalControls)
+                return;
+
+            instance.modifiedTerminalControls = true;
+
+            SetupControls();
+            SetupActions();
+        }
+
+        private static void SetupControls()
+        {
+            var controlIds = new HashSet<string>()
+            {
+                "Add Small Top Part", // HACK using large top part because "add small top part" causes the 5x5 panel to be attached wrong on normal rotor stators.
+                "Reverse",
+                "Torque",
+                "BrakingTorque",
+                "Velocity",
+                "LowerLimit",
+                "UpperLimit",
+                "Displacement",
+                "RotorLock",
+
+                // no longer exist...
+                "Weld speed",
+                "Force weld",
+            };
+
+            List<IMyTerminalControl> controls;
+            MyAPIGateway.TerminalControls.GetControls<IMyMotorAdvancedStator>(out controls);
+
+            foreach(var c in controls)
+            {
+                string id = c.Id;
+
+                if(controlIds.Contains(id))
+                {
+                    if(c.Visible != null)
+                        instance.controlVisibleFunc[id] = c.Visible; // preserve the existing visible condition
+
+                    c.Visible = (b) =>
+                    {
+                        var func = instance.controlVisibleFunc.GetValueOrDefault(id, null);
+                        return (func == null ? true : func.Invoke(b)) && !IsElectronicsPanel(b.SlimBlock.BlockDefinition.Id);
+                    };
+                }
+            }
+        }
+
+        private static void SetupActions()
+        {
+            var actionIds = new HashSet<string>()
+            {
+                "Add Small Top Part",
+                "Reverse",
+                "RotorLock",
+                "IncreaseTorque",
+                "DecreaseTorque",
+                "ResetTorque",
+                "IncreaseBrakingTorque",
+                "DecreaseBrakingTorque",
+                "ResetBrakingTorque",
+                "IncreaseVelocity",
+                "DecreaseVelocity",
+                "ResetVelocity",
+                "IncreaseLowerLimit",
+                "DecreaseLowerLimit",
+                "ResetLowerLimit",
+                "IncreaseUpperLimit",
+                "DecreaseUpperLimit",
+                "ResetUpperLimit",
+                "IncreaseDisplacement",
+                "DecreaseDisplacement",
+                "ResetDisplacement",
+            };
+
+            List<IMyTerminalAction> actions;
+            MyAPIGateway.TerminalControls.GetActions<IMyMotorAdvancedStator>(out actions);
+
+            foreach(var a in actions)
+            {
+                string id = a.Id;
+
+                if(actionIds.Contains(id))
+                {
+                    if(a.Enabled != null)
+                        instance.actionEnabledFunc[id] = a.Enabled;
+
+                    a.Enabled = (b) =>
+                    {
+                        var func = instance.actionEnabledFunc.GetValueOrDefault(id, null);
+                        return (func == null ? true : func.Invoke(b)) && !IsElectronicsPanel(b.SlimBlock.BlockDefinition.Id);
+                    };
+                }
+            }
         }
     }
 }
