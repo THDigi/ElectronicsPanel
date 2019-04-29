@@ -1,9 +1,7 @@
 ﻿using System;
-using System.Collections.Generic;
 using Sandbox.Common.ObjectBuilders;
 using Sandbox.ModAPI;
 using Sandbox.ModAPI.Interfaces;
-using Sandbox.ModAPI.Interfaces.Terminal;
 using VRage.Game.Components;
 using VRage.ModAPI;
 using VRage.ObjectBuilders;

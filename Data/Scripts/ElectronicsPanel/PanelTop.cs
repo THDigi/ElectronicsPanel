@@ -58,9 +58,7 @@ namespace Digi.ElectronicsPanel
         {
             try
             {
-                var defId = slim.BlockDefinition.Id;
-
-                if(!ElectronicsPanelMod.IsBlockAllowed(defId))
+                if(!ElectronicsPanelMod.IsBlockAllowed(slim.BlockDefinition.Id))
                     slim.CubeGrid.RemoveBlock(slim);
             }
             catch(Exception e)

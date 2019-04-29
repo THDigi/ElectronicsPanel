@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Text;
 using Sandbox.Common.ObjectBuilders;
 using Sandbox.ModAPI;
 using Sandbox.ModAPI.Interfaces.Terminal;
@@ -17,7 +18,7 @@ namespace Digi.ElectronicsPanel
         public static ElectronicsPanelMod instance;
 
         private bool modifiedTerminalControls = false;
-        private IMyHudNotification[] notify = new IMyHudNotification[2];
+        private IMyHudNotification[] hudNotifications = new IMyHudNotification[3];
 
         private readonly HashSet<long> electronicPanelGrids = new HashSet<long>();
 
@@ -35,8 +36,19 @@ namespace Digi.ElectronicsPanel
         };
 
         public const string ALLOWED_TYPES_STRING = "Allowed: PB, Timer, LCD, Light, Battery, Button, Speaker, Sensor, Antenna, Beacon, Camera, Projector and ControlPanel.";
+        public string allowedModdedBlocks = null;
 
-        private readonly MyStringHash CONTROLPANEL_SUBTYPEID = MyStringHash.GetOrCompute("SmallControlPanel");
+        private readonly Dictionary<ulong, string[]> allowedModBlockNames = new Dictionary<ulong, string[]>()
+        {
+            [728555954] = new string[] { "Hacking Computer" },
+        };
+
+        private readonly HashSet<MyDefinitionId> allowedBlockIds = new HashSet<MyDefinitionId>()
+        {
+            new MyDefinitionId(typeof(MyObjectBuilder_ControlPanel), "SmallControlPanel"),
+            new MyDefinitionId(typeof(MyObjectBuilder_UpgradeModule), "SmallHackingBlock"),
+        };
+
         private readonly HashSet<MyObjectBuilderType> allowedBlockTypes = new HashSet<MyObjectBuilderType>()
         {
             typeof(MyObjectBuilder_MyProgrammableBlock),
@@ -62,17 +74,64 @@ namespace Digi.ElectronicsPanel
             Log.AutoClose = true;
         }
 
+        public override void BeforeStart()
+        {
+            try
+            {
+                ComputeAllowedBlocksString();
+            }
+            catch(Exception e)
+            {
+                Log.Error(e);
+            }
+        }
+
         protected override void UnloadData()
         {
             instance = null;
         }
 
+        private void ComputeAllowedBlocksString()
+        {
+            if(MyAPIGateway.Utilities.IsDedicated)
+                return;
+
+            StringBuilder sb = null;
+            string[] blockNames;
+
+            foreach(var mod in MyAPIGateway.Session.Mods)
+            {
+                if(mod.PublishedFileId == 0)
+                    continue;
+
+                if(!allowedModBlockNames.TryGetValue(mod.PublishedFileId, out blockNames) && blockNames.Length > 0)
+                    continue;
+
+                if(sb == null)
+                    sb = new StringBuilder("Allowed from mods: ");
+
+                foreach(var name in blockNames)
+                {
+                    sb.Append(name).Append(", ");
+                }
+            }
+
+            if(sb != null)
+            {
+                sb.Length -= 2; // remove trailing ", "
+                allowedModdedBlocks = sb.ToString();
+            }
+        }
+
         public static bool IsBlockAllowed(MyDefinitionId defId)
         {
-            if(defId.TypeId == typeof(MyObjectBuilder_TerminalBlock) && defId.SubtypeId == instance.CONTROLPANEL_SUBTYPEID)
+            if(instance.allowedBlockTypes.Contains(defId.TypeId))
                 return true;
 
-            return instance.allowedBlockTypes.Contains(defId.TypeId);
+            if(instance.allowedBlockIds.Contains(defId))
+                return true;
+
+            return false;
         }
 
         public static bool IsElectronicsPanel(MyDefinitionId id)
@@ -97,17 +156,19 @@ namespace Digi.ElectronicsPanel
 
         public static void Notify(int index, string text, string font, int aliveTime = 200)
         {
-            if(index >= instance.notify.Length)
+            var hudNotifications = instance.hudNotifications;
+
+            if(index >= hudNotifications.Length)
             {
                 Log.Error($"Too high notify index: {index}");
                 return;
             }
 
-            var notify = instance.notify[index];
+            var notify = hudNotifications[index];
 
             if(notify == null)
             {
-                instance.notify[index] = notify = MyAPIGateway.Utilities.CreateNotification(text, aliveTime, font);
+                hudNotifications[index] = notify = MyAPIGateway.Utilities.CreateNotification(text, aliveTime, font);
             }
             else
             {
