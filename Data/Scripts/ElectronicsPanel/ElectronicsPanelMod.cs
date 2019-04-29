@@ -16,9 +16,8 @@ namespace Digi.ElectronicsPanel
     {
         public static ElectronicsPanelMod instance;
 
-        public bool init = false;
-        public bool modifiedTerminalControls = false;
-        public IMyHudNotification[] notify = new IMyHudNotification[2];
+        private bool modifiedTerminalControls = false;
+        private IMyHudNotification[] notify = new IMyHudNotification[2];
 
         private readonly HashSet<long> electronicPanelGrids = new HashSet<long>();
 
@@ -34,9 +33,6 @@ namespace Digi.ElectronicsPanel
             MyStringHash.GetOrCompute(PANEL_BASE),
             MyStringHash.GetOrCompute(PANEL_BASE_4X4),
         };
-
-        public readonly Dictionary<string, Func<IMyTerminalBlock, bool>> actionEnabledFunc = new Dictionary<string, Func<IMyTerminalBlock, bool>>();
-        public readonly Dictionary<string, Func<IMyTerminalBlock, bool>> controlVisibleFunc = new Dictionary<string, Func<IMyTerminalBlock, bool>>();
 
         public const string ALLOWED_TYPES_STRING = "Allowed: PB, Timer, LCD, Light, Battery, Button, Speaker, Sensor, Antenna, Beacon, Camera, Projector and ControlPanel.";
 
@@ -136,9 +132,10 @@ namespace Digi.ElectronicsPanel
 
         private static void SetupControls()
         {
+            // hide these controls for this mods' blocks
             var controlIds = new HashSet<string>()
             {
-                "Add Small Top Part", // HACK using large top part because "add small top part" causes the 5x5 panel to be attached wrong on normal rotor stators.
+                "Add Small Top Part", // HACK not using this for adding small part as it causes the 5x5 panel to be attached wrong on normal rotor stators.
                 "Reverse",
                 "Torque",
                 "BrakingTorque",
@@ -160,22 +157,16 @@ namespace Digi.ElectronicsPanel
             {
                 string id = c.Id;
 
-                if(controlIds.Contains(id))
+                if(controlIds.Contains(c.Id))
                 {
-                    if(c.Visible != null)
-                        instance.controlVisibleFunc[id] = c.Visible; // preserve the existing visible condition
-
-                    c.Visible = (b) =>
-                    {
-                        var func = instance.controlVisibleFunc.GetValueOrDefault(id, null);
-                        return (func == null ? true : func.Invoke(b)) && !IsElectronicsPanel(b.SlimBlock.BlockDefinition.Id);
-                    };
+                    c.Visible = CombineFunc.Create(c.Visible, Visible);
                 }
             }
         }
 
         private static void SetupActions()
         {
+            // hide these actions for this mods' blocks
             var actionIds = new HashSet<string>()
             {
                 "Add Small Top Part",
@@ -206,20 +197,16 @@ namespace Digi.ElectronicsPanel
 
             foreach(var a in actions)
             {
-                string id = a.Id;
-
-                if(actionIds.Contains(id))
+                if(actionIds.Contains(a.Id))
                 {
-                    if(a.Enabled != null)
-                        instance.actionEnabledFunc[id] = a.Enabled;
-
-                    a.Enabled = (b) =>
-                    {
-                        var func = instance.actionEnabledFunc.GetValueOrDefault(id, null);
-                        return (func == null ? true : func.Invoke(b)) && !IsElectronicsPanel(b.SlimBlock.BlockDefinition.Id);
-                    };
+                    a.Enabled = CombineFunc.Create(a.Enabled, Visible);
                 }
             }
+        }
+
+        private static bool Visible(IMyTerminalBlock block)
+        {
+            return !IsElectronicsPanel(block.SlimBlock.BlockDefinition.Id);
         }
     }
 }
