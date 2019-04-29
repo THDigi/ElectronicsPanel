@@ -33,9 +33,7 @@ namespace Digi.ElectronicsPanel
             MyStringHash.GetOrCompute(PANEL_BASE),
             MyStringHash.GetOrCompute(PANEL_BASE_4X4),
         };
-
-        public Action<IMyTerminalBlock> addSmallTopAction;
-
+        
         public readonly Dictionary<string, Func<IMyTerminalBlock, bool>> actionEnabledFunc = new Dictionary<string, Func<IMyTerminalBlock, bool>>();
         public readonly Dictionary<string, Func<IMyTerminalBlock, bool>> controlVisibleFunc = new Dictionary<string, Func<IMyTerminalBlock, bool>>();
 

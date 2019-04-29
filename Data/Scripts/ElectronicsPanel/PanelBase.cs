@@ -63,10 +63,10 @@ namespace Digi.ElectronicsPanel
 
                     foreach(var c in controls)
                     {
-                        if(controlIds.Contains(c.Id))
-                        {
-                            string id = c.Id;
+                        string id = c.Id;
 
+                        if(controlIds.Contains(id))
+                        {
                             if(c.Visible != null)
                                 ElectronicsPanelMod.instance.controlVisibleFunc[id] = c.Visible; // preserve the existing visible condition
 
@@ -75,11 +75,6 @@ namespace Digi.ElectronicsPanel
                                 var func = ElectronicsPanelMod.instance.controlVisibleFunc.GetValueOrDefault(id, null);
                                 return (func == null ? true : func.Invoke(b)) && !ElectronicsPanelMod.IsElectronicsPanel(b.SlimBlock.BlockDefinition.Id);
                             };
-                        }
-                        else if(c.Id == "Add Small Top Part")
-                        {
-                            var cb = (IMyTerminalControlButton)c;
-                            ElectronicsPanelMod.instance.addSmallTopAction = cb.Action;
                         }
                     }
                     #endregion
