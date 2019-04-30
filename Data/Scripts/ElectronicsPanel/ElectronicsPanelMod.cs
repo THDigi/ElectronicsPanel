@@ -15,13 +15,6 @@ namespace Digi.ElectronicsPanel
     [MySessionComponentDescriptor(MyUpdateOrder.AfterSimulation)]
     public class ElectronicsPanelMod : MySessionComponentBase
     {
-        public static ElectronicsPanelMod instance;
-
-        private bool modifiedTerminalControls = false;
-        private IMyHudNotification[] hudNotifications = new IMyHudNotification[3];
-
-        private readonly HashSet<long> electronicPanelGrids = new HashSet<long>();
-
         public const string PANEL_BASE = "ElectronicsPanel";
         public const string PANEL_BASE_4X4 = "ElectronicsPanel4x4";
         public const string PANEL_TOP = "ElectronicsPanelHead";
@@ -33,20 +26,6 @@ namespace Digi.ElectronicsPanel
         {
             MyStringHash.GetOrCompute(PANEL_BASE),
             MyStringHash.GetOrCompute(PANEL_BASE_4X4),
-        };
-
-        public const string ALLOWED_TYPES_STRING = "Allowed: PB, Timer, LCD, Light, Battery, Button, Speaker, Sensor, Antenna, Beacon, Camera, Projector and ControlPanel.";
-        public string allowedModdedBlocks = null;
-
-        private readonly Dictionary<ulong, string[]> allowedModBlockNames = new Dictionary<ulong, string[]>()
-        {
-            [728555954] = new string[] { "Hacking Computer" },
-        };
-
-        private readonly HashSet<MyDefinitionId> allowedBlockIds = new HashSet<MyDefinitionId>()
-        {
-            new MyDefinitionId(typeof(MyObjectBuilder_ControlPanel), "SmallControlPanel"),
-            new MyDefinitionId(typeof(MyObjectBuilder_UpgradeModule), "SmallHackingBlock"),
         };
 
         private readonly HashSet<MyObjectBuilderType> allowedBlockTypes = new HashSet<MyObjectBuilderType>()
@@ -67,6 +46,41 @@ namespace Digi.ElectronicsPanel
             typeof(MyObjectBuilder_Projector),
         };
 
+        private readonly HashSet<MyDefinitionId> allowedBlockIds = new HashSet<MyDefinitionId>()
+        {
+            new MyDefinitionId(typeof(MyObjectBuilder_ControlPanel), "SmallControlPanel"),
+        };
+
+        private readonly Dictionary<ulong, ModInfo> allowedBlocksFromMods = new Dictionary<ulong, ModInfo>()
+        {
+            [728555954] = new ModInfo()
+            {
+                BlockNames = new string[]
+                {
+                    "Hacking Computer",
+                },
+                BlockDefIds = new MyDefinitionId[]
+                {
+                    new MyDefinitionId(typeof(MyObjectBuilder_UpgradeModule), "SmallHackingBlock"),
+                },
+            },
+        };
+
+        public const string ALLOWED_TYPES_STRING = "Allowed: PB, Timer, LCD, Light, Battery, Button, Speaker, Sensor, Antenna, Beacon, Camera, Projector and ControlPanel.";
+
+        class ModInfo
+        {
+            public string[] BlockNames;
+            public MyDefinitionId[] BlockDefIds;
+        }
+
+        internal static ElectronicsPanelMod instance;
+        internal string AllowedModdedBlocks = null;
+
+        private bool modifiedTerminalControls = false;
+        private IMyHudNotification[] hudNotifications = new IMyHudNotification[3];
+        private readonly HashSet<long> electronicPanelGrids = new HashSet<long>();
+
         public override void LoadData()
         {
             instance = this;
@@ -78,7 +92,7 @@ namespace Digi.ElectronicsPanel
         {
             try
             {
-                ComputeAllowedBlocksString();
+                ComputeAllowedBlocks();
             }
             catch(Exception e)
             {
@@ -91,35 +105,40 @@ namespace Digi.ElectronicsPanel
             instance = null;
         }
 
-        private void ComputeAllowedBlocksString()
+        private void ComputeAllowedBlocks()
         {
             if(MyAPIGateway.Utilities.IsDedicated)
                 return;
 
             StringBuilder sb = null;
-            string[] blockNames;
+            ModInfo modInfo;
 
             foreach(var mod in MyAPIGateway.Session.Mods)
             {
                 if(mod.PublishedFileId == 0)
                     continue;
 
-                if(!allowedModBlockNames.TryGetValue(mod.PublishedFileId, out blockNames) && blockNames.Length > 0)
+                if(!allowedBlocksFromMods.TryGetValue(mod.PublishedFileId, out modInfo))
                     continue;
 
                 if(sb == null)
                     sb = new StringBuilder("Allowed from mods: ");
 
-                foreach(var name in blockNames)
+                foreach(var name in modInfo.BlockNames)
                 {
                     sb.Append(name).Append(", ");
+                }
+
+                foreach(var id in modInfo.BlockDefIds)
+                {
+                    allowedBlockIds.Add(id);
                 }
             }
 
             if(sb != null)
             {
                 sb.Length -= 2; // remove trailing ", "
-                allowedModdedBlocks = sb.ToString();
+                AllowedModdedBlocks = sb.ToString();
             }
         }
 
