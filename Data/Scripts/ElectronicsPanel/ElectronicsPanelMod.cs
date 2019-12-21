@@ -48,7 +48,7 @@ namespace Digi.ElectronicsPanel
 
         private readonly HashSet<MyDefinitionId> allowedBlockIds = new HashSet<MyDefinitionId>()
         {
-            new MyDefinitionId(typeof(MyObjectBuilder_ControlPanel), "SmallControlPanel"),
+            new MyDefinitionId(typeof(MyObjectBuilder_TerminalBlock), "SmallControlPanel"),
         };
 
         private readonly Dictionary<ulong, ModInfo> allowedBlocksFromMods = new Dictionary<ulong, ModInfo>()
