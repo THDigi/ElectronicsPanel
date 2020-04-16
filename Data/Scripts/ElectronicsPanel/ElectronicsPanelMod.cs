@@ -177,11 +177,8 @@ namespace Digi.ElectronicsPanel
         {
             var hudNotifications = instance.hudNotifications;
 
-            if(index >= hudNotifications.Length)
-            {
-                Log.Error($"Too high notify index: {index}");
-                return;
-            }
+            if(index < 0 || index >= hudNotifications.Length)
+                throw new ArgumentException($"Too high notify index: {index}");
 
             var notify = hudNotifications[index];
 
@@ -191,6 +188,7 @@ namespace Digi.ElectronicsPanel
             }
             else
             {
+                notify.Hide(); // required since SE v1.194
                 notify.Font = font;
                 notify.Text = text;
                 notify.AliveTime = aliveTime;
