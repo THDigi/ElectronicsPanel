@@ -1,10 +1,10 @@
 ﻿using System;
 using Sandbox.Common.ObjectBuilders;
 using Sandbox.ModAPI;
-using Sandbox.ModAPI.Interfaces;
 using VRage.Game.Components;
 using VRage.ModAPI;
 using VRage.ObjectBuilders;
+using VRageMath;
 
 namespace Digi.ElectronicsPanel
 {
@@ -42,19 +42,19 @@ namespace Digi.ElectronicsPanel
             }
         }
 
-        public override void UpdateAfterSimulation()
+        public override void UpdateBeforeSimulation()
         {
             try
             {
                 if(stator.CubeGrid.Physics == null || stator.PendingAttachment || stator.Top == null || stator.Top.Closed)
                     return;
 
-                var matrix = stator.WorldMatrix;
+                MatrixD matrix = stator.WorldMatrix;
 
                 if(is4x4)
                     matrix.Translation += matrix.Down * (1 - stator.Displacement) + matrix.Forward * 0.75 + matrix.Left * 0.75;
                 else
-                    matrix.Translation += matrix.Up * stator.Displacement; // displacement is negative
+                    matrix.Translation += matrix.Down * (1 - stator.Displacement);
 
                 stator.TopGrid.SetWorldMatrix(matrix);
 
@@ -62,15 +62,12 @@ namespace Digi.ElectronicsPanel
                 {
                     if(Math.Abs(stator.Angle) > 0)
                     {
-                        if(stator.GetValueBool("RotorLock"))
-                            stator.SetValueBool("RotorLock", false);
-
+                        stator.RotorLock = false;
                         stator.TargetVelocityRPM = (stator.Angle > 0 ? 1000 : -1000); // TODO does nothing?!
                     }
                     else
                     {
-                        if(!stator.GetValueBool("RotorLock"))
-                            stator.SetValueBool("RotorLock", true);
+                        stator.RotorLock = true;
                     }
                 }
             }

@@ -43,7 +43,7 @@
       <RotorPart>ElectronicsPanelTop</RotorPart>
       <RotorDisplacementMin>0</RotorDisplacementMin>
       <RotorDisplacementMax>0.0001</RotorDisplacementMax>
-      <RotorDisplacementInModel>1</RotorDisplacementInModel>
+      <RotorDisplacementInModel>0</RotorDisplacementInModel>
       <DamageEffectId>214</DamageEffectId>
       <DamagedSound>ParticleElectrical</DamagedSound>
 

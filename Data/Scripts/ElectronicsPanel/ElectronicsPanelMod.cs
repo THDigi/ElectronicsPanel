@@ -210,74 +210,81 @@ namespace Digi.ElectronicsPanel
 
         private static void SetupControls()
         {
-            // hide these controls for this mods' blocks
-            var controlIds = new HashSet<string>()
-            {
-                "Add Small Top Part", // HACK not using this for adding small part as it causes the 5x5 panel to be attached wrong on normal rotor stators.
-                "Reverse",
-                "Torque",
-                "BrakingTorque",
-                "Velocity",
-                "LowerLimit",
-                "UpperLimit",
-                "Displacement",
-                "RotorLock",
-
-                // no longer exist...
-                "Weld speed",
-                "Force weld",
-            };
-
             List<IMyTerminalControl> controls;
             MyAPIGateway.TerminalControls.GetControls<IMyMotorAdvancedStator>(out controls);
 
             foreach(var c in controls)
             {
-                string id = c.Id;
-
-                if(controlIds.Contains(c.Id))
+                switch(c.Id)
                 {
-                    c.Visible = CombineFunc.Create(c.Visible, Visible);
+                    // hide these controls for this mods' blocks
+
+                    // HACK not allowing this for adding small part as it causes the 5x5 panel to be attached wrong and self-spins
+                    case "Add Small Top Part":
+                    case "AddSmallRotorTopPart":
+                    case "AddSmallHingeTopPart":
+
+                    case "Reverse":
+                    case "Torque":
+                    case "BrakingTorque":
+                    case "Velocity":
+                    case "LowerLimit":
+                    case "UpperLimit":
+                    case "Displacement":
+                    case "RotorLock":
+                    case "HingeLock":
+
+                    // no longer exist visible to user but are still in code...
+                    case "Weld speed":
+                    case "Force weld":
+                        c.Visible = CombineFunc.Create(c.Visible, Visible);
+                        break;
+
+                        //case "Attach":
+                        // TODO: needs custom code to allow it to actually attach
                 }
             }
         }
 
         private static void SetupActions()
         {
-            // hide these actions for this mods' blocks
-            var actionIds = new HashSet<string>()
-            {
-                "Add Small Top Part",
-                "Reverse",
-                "RotorLock",
-                "IncreaseTorque",
-                "DecreaseTorque",
-                "ResetTorque",
-                "IncreaseBrakingTorque",
-                "DecreaseBrakingTorque",
-                "ResetBrakingTorque",
-                "IncreaseVelocity",
-                "DecreaseVelocity",
-                "ResetVelocity",
-                "IncreaseLowerLimit",
-                "DecreaseLowerLimit",
-                "ResetLowerLimit",
-                "IncreaseUpperLimit",
-                "DecreaseUpperLimit",
-                "ResetUpperLimit",
-                "IncreaseDisplacement",
-                "DecreaseDisplacement",
-                "ResetDisplacement",
-            };
-
             List<IMyTerminalAction> actions;
             MyAPIGateway.TerminalControls.GetActions<IMyMotorAdvancedStator>(out actions);
 
             foreach(var a in actions)
             {
-                if(actionIds.Contains(a.Id))
+                switch(a.Id)
                 {
-                    a.Enabled = CombineFunc.Create(a.Enabled, Visible);
+                    // hide these actions for this mods' blocks
+                    case "Add Small Top Part":
+                    case "AddSmallRotorTopPart":
+                    case "AddSmallHingeTopPart":
+                    case "Reverse":
+                    case "RotorLock":
+                    case "HingeLock":
+                    case "IncreaseTorque":
+                    case "DecreaseTorque":
+                    case "ResetTorque":
+                    case "IncreaseBrakingTorque":
+                    case "DecreaseBrakingTorque":
+                    case "ResetBrakingTorque":
+                    case "IncreaseVelocity":
+                    case "DecreaseVelocity":
+                    case "ResetVelocity":
+                    case "IncreaseLowerLimit":
+                    case "DecreaseLowerLimit":
+                    case "ResetLowerLimit":
+                    case "IncreaseUpperLimit":
+                    case "DecreaseUpperLimit":
+                    case "ResetUpperLimit":
+                    case "IncreaseDisplacement":
+                    case "DecreaseDisplacement":
+                    case "ResetDisplacement":
+                        a.Enabled = CombineFunc.Create(a.Enabled, Visible);
+                        break;
+
+                        //case "Attach":
+                        // TODO: needs custom code to allow it to actually attach
                 }
             }
         }
