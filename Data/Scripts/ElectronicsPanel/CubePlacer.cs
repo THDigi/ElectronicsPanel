@@ -33,8 +33,8 @@ namespace Digi.ElectronicsPanel
                         ElectronicsPanelMod.Notify(0, "Can't build '" + def.DisplayNameText + "' on an Electronics Panel!", MyFontEnum.Red);
                         ElectronicsPanelMod.Notify(1, ElectronicsPanelMod.ALLOWED_TYPES_STRING, MyFontEnum.White);
 
-                        if(ElectronicsPanelMod.instance.AllowedModdedBlocks != null)
-                            ElectronicsPanelMod.Notify(2, ElectronicsPanelMod.instance.AllowedModdedBlocks, MyFontEnum.White);
+                        if(ElectronicsPanelMod.Instance.AllowedModdedBlocks != null)
+                            ElectronicsPanelMod.Notify(2, ElectronicsPanelMod.Instance.AllowedModdedBlocks, MyFontEnum.White);
                     }
                 }
             }

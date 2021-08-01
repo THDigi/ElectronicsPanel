@@ -2,10 +2,12 @@
 using System.Collections.Generic;
 using System.Text;
 using Sandbox.Common.ObjectBuilders;
+using Sandbox.Game.Entities;
 using Sandbox.ModAPI;
 using Sandbox.ModAPI.Interfaces.Terminal;
 using VRage.Game;
 using VRage.Game.Components;
+using VRage.Game.Entity;
 using VRage.Game.ModAPI;
 using VRage.ObjectBuilders;
 using VRage.Utils;
@@ -21,6 +23,8 @@ namespace Digi.ElectronicsPanel
         public const string PANEL_TOP_4X4 = "ElectronicsPanelHead4x4";
         public const string PANEL_TOP_DELETE = "ElectronicsPanelHeadDelete";
         public const string PANEL_TOP_4X4_DELETE = "ElectronicsPanelHead4x4Delete";
+
+        public const ushort ChannelId = 60877;
 
         public readonly HashSet<MyStringHash> panelSubtypeIds = new HashSet<MyStringHash>()
         {
@@ -74,16 +78,18 @@ namespace Digi.ElectronicsPanel
             public MyDefinitionId[] BlockDefIds;
         }
 
-        internal static ElectronicsPanelMod instance;
+        internal static ElectronicsPanelMod Instance;
         internal string AllowedModdedBlocks = null;
+        internal List<MyEntity> Entitites = new List<MyEntity>();
 
-        private bool modifiedTerminalControls = false;
+        private Action<IMyTerminalBlock> AttachAction;
+        private bool ModifiedTerminalControls = false;
         private IMyHudNotification[] hudNotifications = new IMyHudNotification[3];
         private readonly HashSet<long> electronicPanelGrids = new HashSet<long>();
 
         public override void LoadData()
         {
-            instance = this;
+            Instance = this;
             Log.ModName = "Electronics Panel";
             Log.AutoClose = true;
         }
@@ -92,6 +98,9 @@ namespace Digi.ElectronicsPanel
         {
             try
             {
+                if(MyAPIGateway.Multiplayer.IsServer)
+                    MyAPIGateway.Multiplayer.RegisterSecureMessageHandler(ChannelId, ReceivedPacket);
+
                 ComputeAllowedBlocks();
             }
             catch(Exception e)
@@ -102,7 +111,9 @@ namespace Digi.ElectronicsPanel
 
         protected override void UnloadData()
         {
-            instance = null;
+            Instance = null;
+
+            MyAPIGateway.Multiplayer.UnregisterSecureMessageHandler(ChannelId, ReceivedPacket);
         }
 
         private void ComputeAllowedBlocks()
@@ -142,12 +153,34 @@ namespace Digi.ElectronicsPanel
             }
         }
 
+        private void ReceivedPacket(ushort channelId, byte[] data, ulong sender, bool isSenderServer)
+        {
+            try
+            {
+                if(!MyAPIGateway.Multiplayer.IsServer)
+                    return;
+
+                long entityId = BitConverter.ToInt64(data, 0);
+
+                MyEntity ent = MyEntities.GetEntityById(entityId);
+                PanelBase logic = ent?.GameLogic?.GetAs<PanelBase>();
+                if(logic == null)
+                    return;
+
+                logic.FindAndAttach(showMessages: false);
+            }
+            catch(Exception e)
+            {
+                Log.Error(e);
+            }
+        }
+
         public static bool IsBlockAllowed(MyDefinitionId defId)
         {
-            if(instance.allowedBlockTypes.Contains(defId.TypeId))
+            if(Instance.allowedBlockTypes.Contains(defId.TypeId))
                 return true;
 
-            if(instance.allowedBlockIds.Contains(defId))
+            if(Instance.allowedBlockIds.Contains(defId))
                 return true;
 
             return false;
@@ -155,27 +188,27 @@ namespace Digi.ElectronicsPanel
 
         public static bool IsElectronicsPanel(MyDefinitionId id)
         {
-            return instance.panelSubtypeIds.Contains(id.SubtypeId);
+            return Instance.panelSubtypeIds.Contains(id.SubtypeId);
         }
 
         public static bool IsElectronicsPanelGrid(long entityId)
         {
-            return instance.electronicPanelGrids.Contains(entityId);
+            return Instance.electronicPanelGrids.Contains(entityId);
         }
 
         public static void AddElectronicsPanelGrid(IMyCubeGrid grid)
         {
-            instance.electronicPanelGrids.Add(grid.EntityId);
+            Instance.electronicPanelGrids.Add(grid.EntityId);
         }
 
         public static void RemoveElectronicsPanelGrid(IMyCubeGrid grid)
         {
-            instance.electronicPanelGrids.Remove(grid.EntityId);
+            Instance.electronicPanelGrids.Remove(grid.EntityId);
         }
 
         public static void Notify(int index, string text, string font, int aliveTime = 200)
         {
-            var hudNotifications = instance.hudNotifications;
+            var hudNotifications = Instance.hudNotifications;
 
             if(index < 0 || index >= hudNotifications.Length)
                 throw new ArgumentException($"Too high notify index: {index}");
@@ -199,19 +232,19 @@ namespace Digi.ElectronicsPanel
 
         public static void SetupTerminalControls()
         {
-            if(instance.modifiedTerminalControls)
+            if(Instance.ModifiedTerminalControls)
                 return;
 
-            instance.modifiedTerminalControls = true;
+            Instance.ModifiedTerminalControls = true;
 
-            SetupControls();
             SetupActions();
+            SetupControls();
         }
 
         private static void SetupControls()
         {
             List<IMyTerminalControl> controls;
-            MyAPIGateway.TerminalControls.GetControls<IMyMotorAdvancedStator>(out controls);
+            MyAPIGateway.TerminalControls.GetControls<IMyMotorAdvancedStator>(out controls); // HACK: IMyMotorStator doesn't work for some reason
 
             foreach(var c in controls)
             {
@@ -240,8 +273,13 @@ namespace Digi.ElectronicsPanel
                         c.Visible = CombineFunc.Create(c.Visible, Visible);
                         break;
 
-                        //case "Attach":
-                        // TODO: needs custom code to allow it to actually attach
+                    case "Attach":
+                        var button = (IMyTerminalControlButton)c;
+                        if(Instance.AttachAction == null && button.Action != null)
+                            Instance.AttachAction = button.Action;
+
+                        button.Action = Action_Attach;
+                        break;
                 }
             }
         }
@@ -249,7 +287,7 @@ namespace Digi.ElectronicsPanel
         private static void SetupActions()
         {
             List<IMyTerminalAction> actions;
-            MyAPIGateway.TerminalControls.GetActions<IMyMotorAdvancedStator>(out actions);
+            MyAPIGateway.TerminalControls.GetActions<IMyMotorAdvancedStator>(out actions); // HACK: IMyMotorStator doesn't work for some reason
 
             foreach(var a in actions)
             {
@@ -283,8 +321,11 @@ namespace Digi.ElectronicsPanel
                         a.Enabled = CombineFunc.Create(a.Enabled, Visible);
                         break;
 
-                        //case "Attach":
-                        // TODO: needs custom code to allow it to actually attach
+                    case "Attach":
+                        if(a.Action != null)
+                            Instance.AttachAction = a.Action;
+                        a.Action = Action_Attach;
+                        break;
                 }
             }
         }
@@ -292,6 +333,26 @@ namespace Digi.ElectronicsPanel
         private static bool Visible(IMyTerminalBlock block)
         {
             return !IsElectronicsPanel(block.SlimBlock.BlockDefinition.Id);
+        }
+
+        private static void Action_Attach(IMyTerminalBlock b)
+        {
+            try
+            {
+                PanelBase logic = b?.GameLogic?.GetAs<PanelBase>();
+                if(logic != null)
+                {
+                    logic.FindAndAttach(showMessages: true);
+                }
+                else
+                {
+                    Instance.AttachAction?.Invoke(b);
+                }
+            }
+            catch(Exception e)
+            {
+                Log.Error(e);
+            }
         }
     }
 }
