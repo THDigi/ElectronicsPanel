@@ -26,11 +26,7 @@ namespace Digi.ElectronicsPanel
 
         public const ushort ChannelId = 60877;
 
-        public readonly HashSet<MyStringHash> panelSubtypeIds = new HashSet<MyStringHash>()
-        {
-            MyStringHash.GetOrCompute(PANEL_BASE),
-            MyStringHash.GetOrCompute(PANEL_BASE_4X4),
-        };
+        public const string ALLOWED_TYPES_STRING = "Allowed: PB, Timer, LCD, Light, Battery, Button, Speaker, Sensor, Antenna, Beacon, Camera, Projector, ControlPanel, TurretControlBlock.";
 
         private readonly HashSet<MyObjectBuilderType> allowedBlockTypes = new HashSet<MyObjectBuilderType>()
         {
@@ -42,12 +38,17 @@ namespace Digi.ElectronicsPanel
             typeof(MyObjectBuilder_ButtonPanel),
             typeof(MyObjectBuilder_SoundBlock),
             typeof(MyObjectBuilder_TextPanel),
+            typeof(MyObjectBuilder_LCDPanelsBlock),
             typeof(MyObjectBuilder_SensorBlock),
             typeof(MyObjectBuilder_RadioAntenna),
             typeof(MyObjectBuilder_LaserAntenna),
             typeof(MyObjectBuilder_Beacon),
             typeof(MyObjectBuilder_CameraBlock),
             typeof(MyObjectBuilder_Projector),
+            typeof(MyObjectBuilder_TurretControlBlock),
+            // TODO allow?
+            //typeof(MyObjectBuilder_OreDetector),
+            //typeof(MyObjectBuilder_SolarPanel),
         };
 
         private readonly HashSet<MyDefinitionId> allowedBlockIds = new HashSet<MyDefinitionId>()
@@ -70,13 +71,17 @@ namespace Digi.ElectronicsPanel
             },
         };
 
-        public const string ALLOWED_TYPES_STRING = "Allowed: PB, Timer, LCD, Light, Battery, Button, Speaker, Sensor, Antenna, Beacon, Camera, Projector and ControlPanel.";
-
         class ModInfo
         {
             public string[] BlockNames;
             public MyDefinitionId[] BlockDefIds;
         }
+
+        public readonly HashSet<MyStringHash> panelSubtypeIds = new HashSet<MyStringHash>()
+        {
+            MyStringHash.GetOrCompute(PANEL_BASE),
+            MyStringHash.GetOrCompute(PANEL_BASE_4X4),
+        };
 
         internal static ElectronicsPanelMod Instance;
         internal string AllowedModdedBlocks = null;
