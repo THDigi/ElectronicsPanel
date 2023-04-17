@@ -26,7 +26,8 @@ namespace Digi.ElectronicsPanel
 
         public const ushort ChannelId = 60877;
 
-        public const string ALLOWED_TYPES_STRING = "Allowed: PB, Timer, LCD, Light, Battery, Button, Speaker, Sensor, Antenna, Beacon, Camera, Projector, ControlPanel, TurretControlBlock, EventController, AI Blocks.";
+        public const string ALLOWED_TYPES_LINE1 = "Allowed: PB, Timer, LCD, Light, Battery, Button, Speaker, Sensor, Antenna, Beacon,";
+        public const string ALLOWED_TYPES_LINE2 = "                Camera, Projector, ControlPanel, TurretControlBlock, EventController, AI Blocks.";
 
         private readonly HashSet<MyObjectBuilderType> allowedBlockTypes = new HashSet<MyObjectBuilderType>()
         {
@@ -101,7 +102,7 @@ namespace Digi.ElectronicsPanel
 
         private Action<IMyTerminalBlock> AttachAction;
         private bool ModifiedTerminalControls = false;
-        private IMyHudNotification[] hudNotifications = new IMyHudNotification[3];
+        private IMyHudNotification[] hudNotifications = new IMyHudNotification[4];
         private readonly HashSet<long> electronicPanelGrids = new HashSet<long>();
 
         public override void LoadData()

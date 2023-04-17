@@ -1,4 +1,5 @@
 ﻿using System;
+using Sandbox.Definitions;
 using Sandbox.Game.Entities;
 using VRage.Game;
 using VRage.Game.Components;
@@ -20,21 +21,22 @@ namespace Digi.ElectronicsPanel
         {
             try
             {
-                var builder = MyCubeBuilder.Static;
-                var def = builder?.CubeBuilderState?.CurrentBlockDefinition;
+                MyCubeBuilder builder = MyCubeBuilder.Static;
+                MyCubeBlockDefinition def = builder?.CubeBuilderState?.CurrentBlockDefinition;
 
-                if(def != null && !ElectronicsPanelMod.IsBlockAllowed(def.Id))
+                if(def != null && def.CubeSize == MyCubeSize.Small && !ElectronicsPanelMod.IsBlockAllowed(def.Id))
                 {
-                    var hit = (IHitInfo)builder.HitInfo;
-                    var grid = hit?.HitEntity as IMyCubeGrid;
+                    IHitInfo hit = (IHitInfo)builder.HitInfo;
+                    IMyCubeGrid grid = hit?.HitEntity as IMyCubeGrid;
 
                     if(grid != null && ElectronicsPanelMod.IsElectronicsPanelGrid(grid.EntityId))
                     {
                         ElectronicsPanelMod.Notify(0, "Can't build '" + def.DisplayNameText + "' on an Electronics Panel!", MyFontEnum.Red);
-                        ElectronicsPanelMod.Notify(1, ElectronicsPanelMod.ALLOWED_TYPES_STRING, MyFontEnum.White);
+                        ElectronicsPanelMod.Notify(1, ElectronicsPanelMod.ALLOWED_TYPES_LINE1, MyFontEnum.White);
+                        ElectronicsPanelMod.Notify(2, ElectronicsPanelMod.ALLOWED_TYPES_LINE2, MyFontEnum.White);
 
                         if(ElectronicsPanelMod.Instance.AllowedModdedBlocks != null)
-                            ElectronicsPanelMod.Notify(2, ElectronicsPanelMod.Instance.AllowedModdedBlocks, MyFontEnum.White);
+                            ElectronicsPanelMod.Notify(3, ElectronicsPanelMod.Instance.AllowedModdedBlocks, MyFontEnum.White);
                     }
                 }
             }
