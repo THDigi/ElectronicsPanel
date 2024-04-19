@@ -27,6 +27,9 @@ namespace Digi.ElectronicsPanel
                     return;
 
                 var rotor = (IMyMotorRotor)Entity;
+                if(rotor.CubeGrid?.Physics == null)
+                    return;
+                
                 var stator = rotor.Base;
                 var grid = rotor.CubeGrid;
                 var gridObj = (MyObjectBuilder_CubeGrid)grid.GetObjectBuilder(false);
