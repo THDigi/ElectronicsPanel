@@ -288,7 +288,7 @@ namespace Digi.ElectronicsPanel
                     // no longer exist visible to user but are still in code...
                     case "Weld speed":
                     case "Force weld":
-                        c.Visible = CombineFunc.Create(c.Visible, Visible);
+                        c.Visible = CombineFunc.Create(c.Visible, RotorControlsVisible);
                         break;
 
                     case "Attach":
@@ -336,7 +336,7 @@ namespace Digi.ElectronicsPanel
                     case "IncreaseDisplacement":
                     case "DecreaseDisplacement":
                     case "ResetDisplacement":
-                        a.Enabled = CombineFunc.Create(a.Enabled, Visible);
+                        a.Enabled = CombineFunc.Create(a.Enabled, RotorControlsVisible);
                         break;
 
                     case "Attach":
@@ -348,9 +348,9 @@ namespace Digi.ElectronicsPanel
             }
         }
 
-        private static bool Visible(IMyTerminalBlock block)
+        private static bool RotorControlsVisible(IMyTerminalBlock b)
         {
-            return !IsElectronicsPanel(block.SlimBlock.BlockDefinition.Id);
+            return b?.GameLogic?.GetAs<PanelBase>() == null;
         }
 
         private static void Action_Attach(IMyTerminalBlock b)

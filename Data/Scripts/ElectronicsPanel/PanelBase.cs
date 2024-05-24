@@ -116,6 +116,7 @@ namespace Digi.ElectronicsPanel
                 || Vector3D.DistanceSquared(sphere.Center, topPart.GetPosition()) > radiusSq)
                     continue;
 
+                // TODO: needs to validate base with top too...
                 if(topPart.BlockDefinition.SubtypeName != ElectronicsPanelMod.PANEL_TOP_4X4 && topPart.BlockDefinition.SubtypeName != ElectronicsPanelMod.PANEL_TOP)
                 {
                     messageType = 1;
