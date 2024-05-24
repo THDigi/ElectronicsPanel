@@ -100,7 +100,7 @@ namespace Digi.ElectronicsPanel
 
         private Action<IMyTerminalBlock> AttachAction;
         private bool ModifiedTerminalControls = false;
-        private IMyHudNotification[] hudNotifications = new IMyHudNotification[4];
+        private List<IMyHudNotification> HudNotifications = new List<IMyHudNotification>();
         private readonly HashSet<long> electronicPanelGrids = new HashSet<long>();
 
         public override void LoadData()
@@ -224,19 +224,20 @@ namespace Digi.ElectronicsPanel
 
         public static void Notify(int index, string text, string font, int aliveTime = 200)
         {
-            var hudNotifications = Instance.hudNotifications;
-
-            if(index < 0 || index >= hudNotifications.Length)
+            List<IMyHudNotification> hudNotifications = Instance.HudNotifications;
+            if(index < 0)
                 throw new ArgumentException($"Too high notify index: {index}");
 
-            var notify = hudNotifications[index];
+            IMyHudNotification notify = null;
 
-            if(notify == null)
+            if(index >= hudNotifications.Count)
             {
-                hudNotifications[index] = notify = MyAPIGateway.Utilities.CreateNotification(text, aliveTime, font);
+                notify = MyAPIGateway.Utilities.CreateNotification(text, aliveTime, font);
+                hudNotifications.Add(notify);
             }
             else
             {
+                notify = hudNotifications[index];
                 notify.Hide(); // required since SE v1.194
                 notify.Font = font;
                 notify.Text = text;

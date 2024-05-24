@@ -31,12 +31,16 @@ namespace Digi.ElectronicsPanel
 
                     if(grid != null && ElectronicsPanelMod.IsElectronicsPanelGrid(grid.EntityId))
                     {
-                        ElectronicsPanelMod.Notify(0, "Can't build '" + def.DisplayNameText + "' on an Electronics Panel!", MyFontEnum.Red);
+                        if(ModContext.ModItem.PublishedFileId == 0) // to find them easier when developing this mod
+                            ElectronicsPanelMod.Notify(0, $"Can't build '{def.Id.TypeId.ToString().Substring("MyObjectBuilder_".Length)}/{def.Id.SubtypeName}' on an Electronics Panel!", MyFontEnum.Red);
+                        else
+                            ElectronicsPanelMod.Notify(0, $"Can't build '{def.DisplayNameText}' on an Electronics Panel!", MyFontEnum.Red);
+
                         ElectronicsPanelMod.Notify(1, ElectronicsPanelMod.ALLOWED_TYPES_LINE1, MyFontEnum.White);
                         ElectronicsPanelMod.Notify(2, ElectronicsPanelMod.ALLOWED_TYPES_LINE2, MyFontEnum.White);
 
                         if(ElectronicsPanelMod.Instance.AllowedModdedBlocks != null)
-                            ElectronicsPanelMod.Notify(3, ElectronicsPanelMod.Instance.AllowedModdedBlocks, MyFontEnum.White);
+                            ElectronicsPanelMod.Notify(4, ElectronicsPanelMod.Instance.AllowedModdedBlocks, MyFontEnum.White);
                     }
                 }
             }
