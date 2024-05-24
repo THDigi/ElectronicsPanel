@@ -26,8 +26,8 @@ namespace Digi.ElectronicsPanel
 
         public const ushort ChannelId = 60877;
 
-        public const string ALLOWED_TYPES_LINE1 = "Allowed: PB, Timer, LCD, Light, Battery, Button, Speaker, Sensor, Antenna, Beacon,";
-        public const string ALLOWED_TYPES_LINE2 = "                Camera, Projector, ControlPanel, TurretControlBlock, EventController, AI Blocks.";
+        public const string ALLOWED_TYPES_LINE1 = "Allowed: PB, Timer, LCD, Light, Battery, Button, Speaker, Sensor, Antenna, Beacon, Camera";
+        public const string ALLOWED_TYPES_LINE2 = "                Projector, ControlPanel, CTC, EventController, AI Blocks, Action Relay, Broadcaster.";
 
         private readonly HashSet<MyObjectBuilderType> allowedBlockTypes = new HashSet<MyObjectBuilderType>()
         {
@@ -47,9 +47,6 @@ namespace Digi.ElectronicsPanel
             typeof(MyObjectBuilder_CameraBlock),
             typeof(MyObjectBuilder_Projector),
             typeof(MyObjectBuilder_TurretControlBlock),
-
-            // HACK: backwards compatibility
-#if !(VERSION_201 || VERSION_200 || VERSION_199 || VERSION_198 || VERSION_197 || VERSION_196 || VERSION_195 || VERSION_194 || VERSION_193 || VERSION_192 || VERSION_191 || VERSION_190)
             typeof(MyObjectBuilder_EventControllerBlock),
             typeof(MyObjectBuilder_PathRecorderBlock),
             typeof(MyObjectBuilder_BasicMissionBlock),
@@ -57,7 +54,8 @@ namespace Digi.ElectronicsPanel
             typeof(MyObjectBuilder_DefensiveCombatBlock),
             typeof(MyObjectBuilder_OffensiveCombatBlock),
             typeof(MyObjectBuilder_EmotionControllerBlock),
-#endif
+            typeof(MyObjectBuilder_TransponderBlock), // action relay
+            typeof(MyObjectBuilder_BroadcastController),
 
             // TODO allow?
             //typeof(MyObjectBuilder_OreDetector),
