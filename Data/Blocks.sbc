@@ -86,7 +86,7 @@
       <MirroringY>Z</MirroringY>
       <MirroringZ>Y</MirroringZ>
       <EdgeType>Light</EdgeType>
-      <BuildTimeSeconds>20</BuildTimeSeconds>
+      <BuildTimeSeconds>10</BuildTimeSeconds>
       <DamageEffectId>214</DamageEffectId>
       <DamagedSound>ParticleElectrical</DamagedSound>
     </Definition>
@@ -169,7 +169,7 @@
       <MirroringY>Z</MirroringY>
       <MirroringZ>Y</MirroringZ>
       <EdgeType>Light</EdgeType>
-      <BuildTimeSeconds>20</BuildTimeSeconds>
+      <BuildTimeSeconds>10</BuildTimeSeconds>
       <DamageEffectId>214</DamageEffectId>
       <DamagedSound>ParticleElectrical</DamagedSound>
     </Definition>
