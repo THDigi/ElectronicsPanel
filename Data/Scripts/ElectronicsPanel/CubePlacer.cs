@@ -38,6 +38,7 @@ namespace Digi.ElectronicsPanel
 
                         ElectronicsPanelMod.Notify(1, ElectronicsPanelMod.ALLOWED_TYPES_LINE1, MyFontEnum.White);
                         ElectronicsPanelMod.Notify(2, ElectronicsPanelMod.ALLOWED_TYPES_LINE2, MyFontEnum.White);
+                        ElectronicsPanelMod.Notify(3, ElectronicsPanelMod.ALLOWED_TYPES_LINE3, MyFontEnum.White);
 
                         if(ElectronicsPanelMod.Instance.AllowedModdedBlocks != null)
                             ElectronicsPanelMod.Notify(4, ElectronicsPanelMod.Instance.AllowedModdedBlocks, MyFontEnum.White);

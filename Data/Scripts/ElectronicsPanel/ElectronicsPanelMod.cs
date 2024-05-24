@@ -27,7 +27,8 @@ namespace Digi.ElectronicsPanel
         public const ushort ChannelId = 60877;
 
         public const string ALLOWED_TYPES_LINE1 = "Allowed: PB, Timer, LCD, Light, Battery, Button, Speaker, Sensor, Antenna, Beacon, Camera";
-        public const string ALLOWED_TYPES_LINE2 = "                Projector, ControlPanel, CTC, EventController, AI Blocks, Action Relay, Broadcaster.";
+        public const string ALLOWED_TYPES_LINE2 = "                Projector, ControlPanel, CTC, EventController, AI Blocks, Action Relay,";
+        public const string ALLOWED_TYPES_LINE3 = "                ExhaustPipe, HeatVent, Neon, Symbols, Signs, AccessPanels, Scaffold, ConsoleModule, Plushies.";
 
         private readonly HashSet<MyObjectBuilderType> allowedBlockTypes = new HashSet<MyObjectBuilderType>()
         {
@@ -54,11 +55,12 @@ namespace Digi.ElectronicsPanel
             typeof(MyObjectBuilder_DefensiveCombatBlock),
             typeof(MyObjectBuilder_OffensiveCombatBlock),
             typeof(MyObjectBuilder_EmotionControllerBlock),
+            typeof(MyObjectBuilder_ExhaustBlock),
+            typeof(MyObjectBuilder_HeatVentBlock),
             typeof(MyObjectBuilder_TransponderBlock), // action relay
             typeof(MyObjectBuilder_BroadcastController),
 
-            // TODO allow?
-            //typeof(MyObjectBuilder_OreDetector),
+            // TODO allow? maybe if vanilla has some small panels
             //typeof(MyObjectBuilder_SolarPanel),
         };
 
@@ -81,6 +83,56 @@ namespace Digi.ElectronicsPanel
                 },
             },
         };
+
+        public static bool IsBlockAllowed(MyDefinitionId defId)
+        {
+            if(Instance.allowedBlockTypes.Contains(defId.TypeId))
+                return true;
+
+            if(Instance.allowedBlockIds.Contains(defId))
+                return true;
+
+            if(defId.TypeId == typeof(MyObjectBuilder_TerminalBlock))
+            {
+                string subtype = defId.SubtypeName;
+
+                if(subtype == "SmallControlPanel")
+                    return true;
+
+                if(subtype.StartsWith("SmallBlockAccessPanel"))
+                    return true;
+            }
+
+            if(defId.TypeId == typeof(MyObjectBuilder_EmissiveBlock))
+            {
+                string subtype = defId.SubtypeName;
+
+                if(subtype.StartsWith("SmallNeonTube"))
+                    return true;
+            }
+
+            if(defId.TypeId == typeof(MyObjectBuilder_CubeBlock))
+            {
+                string subtype = defId.SubtypeName;
+
+                if(subtype.StartsWith("SmallWarningSign"))
+                    return true;
+
+                if(subtype.StartsWith("SmallSymbol"))
+                    return true;
+
+                if(subtype.StartsWith("Truss")) // scaffold blocks and truss pillar
+                    return true;
+
+                if(subtype.StartsWith("SmallBlockConsoleModule"))
+                    return true;
+
+                if(subtype.Contains("Plushie"))
+                    return true;
+            }
+
+            return false;
+        }
 
         class ModInfo
         {
@@ -189,17 +241,6 @@ namespace Digi.ElectronicsPanel
             {
                 Log.Error(e);
             }
-        }
-
-        public static bool IsBlockAllowed(MyDefinitionId defId)
-        {
-            if(Instance.allowedBlockTypes.Contains(defId.TypeId))
-                return true;
-
-            if(Instance.allowedBlockIds.Contains(defId))
-                return true;
-
-            return false;
         }
 
         public static bool IsElectronicsPanel(MyDefinitionId id)
